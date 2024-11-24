@@ -3,4 +3,3 @@
 - Refresh Token cachlenerek authentication işlemi gerçekleştirilir.
 - Test apisinde tasarlanan attribute ile permission bazlı yetkilendirilme yapılmıştır.
 - Her bir client için farklı access token üretilir.
-- Bu access tokenların claimleri her clientte farklı olabilir. Bunlar veritabanında kaydedilir.
