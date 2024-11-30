@@ -5,5 +5,6 @@
         public DateTime RefreshTokenExpire { get; set; }
         public string Refresh_Token { get; set; }
         public int UserID { get; set; }
+        public List<string> Permissions { get; set; }
     }
 }

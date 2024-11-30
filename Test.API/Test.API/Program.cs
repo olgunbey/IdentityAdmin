@@ -3,6 +3,7 @@ using IdentityAdmin.Database;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
+using ServiceStack.Redis;
 using Test.API;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +15,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IUserDbExecute, UserDbExecute>();
+builder.Services.AddSingleton<IRedisClientAsync>(x => new RedisClient("localhost",1433));
 builder.Services.AddAuthorization(options =>
 {
 });

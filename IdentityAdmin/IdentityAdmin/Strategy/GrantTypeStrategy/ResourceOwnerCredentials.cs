@@ -35,20 +35,22 @@ namespace IdentityAdmin.Strategy.GrantTypeStrategy
                 throw new NotUserException("bu kullanıcı yok");
             }
 
-            var claims = FillClaimRoles(user.UserRoles.Select(y => y.Role)).ToList();
+            var userRoles = FillClaimRoles(user.UserRoles.Select(y => y.Role)).ToList();
 
 
             var userInfos = client.ClientUserInfos.Select(y => y.UserInfo);
             var userInfoClaim= FillClaimUserInfo(userInfos, user).ToList();
 
-            claims.AddRange(userInfoClaim);
+            userRoles.AddRange(userInfoClaim);
+
+            userRoles.Add(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
 
             DateTime expires = DateTime.UtcNow.AddMinutes(1);
             var securityKey = new SymmetricSecurityKey(Hashing.Hash(client.Secret));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             var SecretToken = new JwtSecurityToken(issuer: client.Issuer,
                 audience: client.Audience,
-                claims: claims,
+                claims: userRoles,
                 expires: expires,
                 signingCredentials: credentials
                 );
@@ -61,7 +63,8 @@ namespace IdentityAdmin.Strategy.GrantTypeStrategy
                 UserId = user.Id,
                 Refresh_Token = Guid.NewGuid().ToString(),
                 RefreshTokenExpire = DateTime.UtcNow.AddDays(1),
-                AccessTokenExpire = expires
+                AccessTokenExpire = expires,
+                Permissions=user.UserPermissions.Select(x => x.Permission.Name).ToList()
             };
         }
 

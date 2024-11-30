@@ -1,7 +1,8 @@
 ﻿using IdentityAdmin.Database;
-using IdentityAdmin.Exceptions;
+using IdentityAdmin.Dto;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using ServiceStack.Redis;
 using System.Security.Claims;
 
 namespace Test.API.Atrributes
@@ -10,24 +11,34 @@ namespace Test.API.Atrributes
     {
         public string Permission { get; set; }
         private readonly IUserDbExecute _userDbExecute;
-        public HasPermissionFilter(string permission, IUserDbExecute userDbExecute)
+        private readonly IRedisClientAsync _redisClientAsync;
+        public HasPermissionFilter(string permission, IUserDbExecute userDbExecute, IRedisClientAsync redisClientAsync)
         {
             Permission = permission;
             _userDbExecute = userDbExecute;
+            _redisClientAsync = redisClientAsync;
         }
 
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
-            Claim? userClaim = context.HttpContext.User.FindFirst("Name");
+            Claim? userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
             Claim? userRole = context.HttpContext.User.FindFirst(ClaimTypes.Role);
 
-            if (userClaim == null || userRole == null)
+            if (userIdClaim == null || userRole == null)
             {
                 context.Result = new UnauthorizedResult();
             }
-            bool hasPermission = await _userDbExecute.UserHasPermissionControl(Permission,userClaim!.Value);
+            List<CacheRefreshTokenDto> cacheRefreshTokenDto = await _redisClientAsync.GetAsync<List<CacheRefreshTokenDto>>("CacheRefreshToken");
 
-            if (!hasPermission)
+            var user = cacheRefreshTokenDto.First(y => y.UserID == int.Parse(userIdClaim!.Value));
+            if (user!= null && user.RefreshTokenExpire>=DateTime.UtcNow)
+            {
+                if(!user.Permissions.Any(y => y.Equals(Permission)))
+                {
+                    context.Result = new ForbidResult();
+                }
+            }
+            else
             {
                 context.Result = new UnauthorizedResult();
             }

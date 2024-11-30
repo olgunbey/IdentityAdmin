@@ -10,7 +10,7 @@ namespace IdentityAdmin.Database
         {
             using (AppDbContext appDbContext = new())
             {
-                return await appDbContext.User.Include(y => y.UserRoles).ThenInclude(y => y.Role).Include(y => y.UserPermissions).FirstOrDefaultAsync(y => y.Name == name && y.Password == password);
+                return await appDbContext.User.Include(y => y.UserRoles).ThenInclude(y => y.Role).Include(y => y.UserPermissions).ThenInclude(y=>y.Permission).FirstOrDefaultAsync(y => y.Name == name && y.Password == password);
             }
         }
 
@@ -30,32 +30,37 @@ namespace IdentityAdmin.Database
             }
         }
 
-        public async Task<bool> UserHasPermissionControl(string permission, string username)
-        {
-            using (AppDbContext appDbContext = new())
-            {
-                User user = await appDbContext.User.FirstAsync(y => y.Name == username);
 
-                await appDbContext.Entry(user).Collection(y => y.UserPermissions).LoadAsync();
+        #region Bu kullanıcının yetki kontrolü redis'e aktarıldı. 
+        //public async Task<bool> UserHasPermissionControl(string permission, string username)
+        //{
+        //    using (AppDbContext appDbContext = new())
+        //    {
+        //        User user = await appDbContext.User.FirstAsync(y => y.Name == username);
 
-                foreach (var userPermission in user.UserPermissions)
-                {
-                  await  appDbContext.Entry(userPermission).Reference(y => y.Permission).LoadAsync();
-                }
-                bool hasPermission = user.UserPermissions.Any(y => y.Permission.Name == permission);
+        //        await appDbContext.Entry(user).Collection(y => y.UserPermissions).LoadAsync();
 
-                if (hasPermission)
-                    return true;
-                return false;
-            }
+        //        foreach (var userPermission in user.UserPermissions)
+        //        {
+        //          await  appDbContext.Entry(userPermission).Reference(y => y.Permission).LoadAsync();
+        //        }
+        //        bool hasPermission = user.UserPermissions.Any(y => y.Permission.Name == permission);
 
-        }
+        //        if (hasPermission)
+        //            return true;
+        //        return false;
+        //    }
+        //}
+
+        #endregion
+
+
     }
     public interface IUserDbExecute
     {
         Task<User?> GetUser(string name, string password);
         Task<User> GetUserById(int userId);
-        Task<bool> UserHasPermissionControl(string permission, string username);
+        //Task<bool> UserHasPermissionControl(string permission, string username);
         Task<User?> GetUserProperties(Expression<Func<User, bool>> expression);
     }
 }

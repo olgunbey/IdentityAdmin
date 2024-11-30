@@ -25,7 +25,8 @@ namespace IdentityAdmin.Controllers
             {
                 RefreshTokenExpire = token.RefreshTokenExpire,
                 Refresh_Token = token.Refresh_Token,
-                UserID = token.UserId
+                UserID = token.UserId,
+                Permissions = token.Permissions,
             };
             await _redisClient.SetAsync("CacheRefreshToken", cacheRefreshTokenDto);
             return Results.Ok(token);
