@@ -3,3 +3,4 @@
 - Refresh Token cachlenerek authentication işlemi gerçekleştirilir.
 - Test apisinde tasarlanan attribute ile permission bazlı yetkilendirilme yapılmıştır.
 - Her bir client için farklı access token üretilir.
+- Yetkiler Redis tarafından kontrol edilerek, authorization işlemi yapılır
